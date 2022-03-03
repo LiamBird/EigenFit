@@ -10,6 +10,10 @@
 ## 05/02/2022
 ## Added quick_stack_view method
 
+## 03/03/2022
+## Added cosmic_ray_view method
+## Added docstrings
+
 import os
 import numpy as np
 
@@ -63,7 +67,12 @@ class _SimpleLoad(object):
         
     def update(self, verbose=False):
         """
-        
+        Updates the MapSeries with any new data in the load_path directory.
+        Useful if updating MapSeries on the fly (while adding new .txt files to the directory) and re-sorts series labels from lowest to highest if sort=True
+        Inputs
+        ---------
+        verbose (bool) default=False:
+            displays a loading bar if True
         """
         previous_keys = [*self.data.keys()]
         if verbose == True:
@@ -86,6 +95,9 @@ class _SimpleLoad(object):
         self._find_common()
         
     def _find_common(self, clipped=False):
+        """
+        hidden utility for updating the common values
+        """
         if "common" not in vars(self):
             self.common = _Common()
             
@@ -105,6 +117,16 @@ class _SimpleLoad(object):
                 vars(self.common)[key] = vars([*self.data.values()][0].raw)[key]
         
     def set_clip_range(self, start_shift=None, end_shift=None):
+        """
+        select a sub-set of data within a range of shift values for further analyis (applied to all map data in series simultaneously)
+        
+        Inputs
+        ----------
+        start_shift (float) default=None:
+            Lowest shift value to include in the sub-set (uses first measured value if None)
+        end_shift (float) default=None:
+            Highest shift value to include in the sub-set (uses last measured value if None)
+        """
         for key, measurement in self.data.items():
             measurement.set_clip_range(start_shift, end_shift)
             
@@ -112,6 +134,10 @@ class _SimpleLoad(object):
         
         
     def quick_stack_view(self, offset_max=100):
+        """
+        view a graph of the spectra, labelled by series value, with interactive sliders to select the (x, y) map position to show
+        """
+        
         import matplotlib.pyplot as plt
         import numpy as np
         from ipywidgets import interact, IntSlider, FloatSlider
@@ -140,12 +166,162 @@ class _SimpleLoad(object):
 
         return f, ax
     
+    def cosmic_ray_view(self, positions_to_view=3,
+                        show_all_voltages=True, voltages_to_show=None first_n=False, last_n=False, n_voltages=2,
+                        colors=8, mark_interval=4,
+                        figsize=(6, 6)
+                       ):
+        """
+        View a 'stack' of graphs with data for some/ all of the series values with interactive sliders for quick manual identification of cosmic ray spikes. 
+        Inputs
+        ----------
+        positions_to_view (int) default=3:
+            the number of axes to show in the vertical stack of plots
+        
+        show_all_voltages (bool) default=True:
+            if True, displays all of the series spectra for each position
+            if False, set first_n or last_n to True (see below) or specify voltages_to_show as list
+            
+        voltages_to_show (list) default=None:
+            if show_all_voltages is False, specify a list of series values to show        
+        
+        first_n (bool) default=False:
+            if True, displays the first n_voltages (show_all_voltages=False)
+        
+        last_n (bool) default=False:
+            if True, displays the first n_voltages (show_all_voltages=False)
+        
+        n_voltages (int) default=2:
+            the number of voltages (first_n or last_n) to display
+        
+        colors (int) default=8:
+            the number of different colors to use to display voltages (NB plots also differentiated by markers)
+        
+        mark_interval (int) default=4:
+            interval between markers. Set to 1 to mark every point (takes longer for graph to load)
+        
+        figsize (tuple) default=(6, 6):
+            size of the matplotlib figure
+        """
+        
+        import matplotlib.pyplot as plt
+        import numpy as np
+        from ipywidgets import interact, IntSlider, FloatSlider
+        n_segments = int(np.ceil(self.common.x_extent/positions_to_view))
+
+        if first_n == True:
+            voltages_to_plot = self.voltage[:n_voltages]
+        if last_n == True:
+            voltages_to_plot = self.voltage[-n_voltages:]
+        elif show_all_voltages == True:
+            voltages_to_plot = self.voltage
+
+        ax_sort = dict([(n, 
+                     np.arange(self.common.x_extent)[positions_to_view*n:positions_to_view*(n+1)]) 
+                        for n in range(n_segments)])
+
+        if "clipped" in vars([*self.data.values()][0]):
+            disp = "clipped"
+        else:
+            disp = "raw"
+
+        markers = ["o", "s", "d", "^", "v"]
+        colors = [plt.cm.tab10(i) for i in range(colors)]
+
+        color_id = 0
+        marker_id = 0
+        plot_colors = []
+        plot_markers = []
+
+        for nv, v in enumerate(voltages_to_plot):
+            if color_id < len(colors):
+                plot_colors.append(colors[color_id])
+                plot_markers.append(markers[marker_id])
+                color_id += 1
+            elif color_id == len(colors):   
+                color_id = 0
+                marker_id += 1
+                plot_colors.append(colors[color_id])
+                plot_markers.append(markers[marker_id])  
+
+        f, (axes) = plt.subplots(positions_to_view, 1, figsize=(figsize))
+
+        for axis in axes:
+            pos = axis.get_position()
+            axis.set_position((pos.x0, pos.y0+0.05, 0.8*pos.width, pos.height))
+
+        def update(seg_id, x):
+            for row in range(positions_to_view):
+                axes[row].cla()
+            for row in range(positions_to_view):
+                try:
+                    axes[row].set_ylabel("x={}, y={}".format(x, ax_sort[seg_id][row]))
+                    [axes[row].plot(self.common.shift, 
+                                    vars(self.data[volt])[disp].map[x, ax_sort[seg_id][row], :],
+                                    marker=plot_markers[nvolt],
+                                    markevery=4,
+                                    label=volt) for nvolt, volt in enumerate(voltages_to_plot)];
+                except:
+                    pass
+
+            handles, labels = axes[0].get_legend_handles_labels()
+            f.legend(handles, labels, loc="center left", bbox_to_anchor=(0.8, 0.5))
+        interact(update, seg_id=IntSlider(min=0, max=n_segments-1, step=1),
+                         x=IntSlider(min=0, max=self.common.x_extent-1, step=1))
+
+        return f, (axes)
+    
 
 def MapSeries(load_path, verbose=False,
               sequence_label="cellvoltage", fname_delimiter="_",
               series_by="voltage", sort=True):
     """
+    Creates, loads, or updates a series of Raman maps sorted by a series label, and includes functions for pre-processing and viewing the raw data prior to fitting.
     
+    Inputs
+    ----------
+    load_path (str):
+        path to a directory containing text files to load into a map series (possibly with pre-created VoltageSeries.npy file)
+    verbose (bool) default = False:
+        displays a loading bar if True
+    sequence_label (str) default = "cellvoltage":
+        the label used in filenames to indicate the substring containing the series value
+    fname_delimiter (str) default = "_"
+        character used to separate filename into substrings to find label
+    series_by (str) default = "voltage"
+        the label given to the list of series values in the MapSeries object
+    sort (bool) default = True
+        sort the data series from lowest to highest
+        
+    Methods
+    ----------
+    update:
+        appends new data files
+    set_clip_range:
+        select a sub-set of the shift axis values
+    quick_stack_view:
+        displays all the spectra measured at the same position for the full series
+    cosmic_ray_view:
+        displays multiple spectra at a given position with multiple plots for quick identification of cosmic rays
+    
+    
+    Before you start: 
+    ----------
+    Save the raw Raman data for a series (e.g. time series, voltage series) into a single directory. The filename can be anything, but should include a 'sequence label' and corresponding value delimited by a recognisable character (typically '_')
+    
+    Example filenames: 'myRamanMap_cellvoltage2.45_514nm_center750.txt' -- sequence_label="cellvoltage", fname_delimiter="_"
+                       'myRamanMap-timestamp60secs-514nm.txt" -- sequence_label="timestamp", fname_delimiter="-"
+                       
+   How to call:
+   ----------
+   series = MapSeries(load_path=os.path.join("Top_directory", "Series_directory"))
+   
+   Notes:
+   ----------                       
+   Creating a MapSeries automatically saves the corresponding formatted data in a .npy file in the load_path directory. 
+   New data can be incorporated into a MapSeries object by simply calling the MapSeries function with the load_path specified: this will append new data to the existing .npy file. (This saves time compared to reloading all of the data fresh every time the function is called). 
+   Returns _SimpleLoad class (with methods described in this docstring)
+                       
     """  
     if "VoltageSeries.npy" in os.listdir(load_path):
         if verbose == True:
