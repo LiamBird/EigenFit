@@ -76,6 +76,9 @@ class SeriesDimensionReduction(object):
                                                             spectrum in map_reshaped[idx]]))
                                                ])
                 
+                if reload_path != "none" and os.isdir(reload_path):
+                    os.makedirs(reload_path)
+                
                 if reload_path != "none":
                     np.save(os.path.join(reload_path, "background_removed_degree_{}.npy".format(background_degree)),
                             self.background_removed,
