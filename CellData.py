@@ -2,7 +2,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 import EigenFit as eig
-from CycVolt import CycVolt
 import re
 
 from lmfit.models import LinearModel, LorentzianModel
@@ -11,8 +10,6 @@ from datetime import datetime
 
 from ipywidgets import interact, IntSlider
 from sklearn.decomposition import PCA 
-
-from plot_functions import *
 
 try:
     from tqdm import notebook
@@ -476,25 +473,33 @@ class CellData(object):
 
         return f, ax        
     
-    def heatmaps(self, cycle, discharge=True, peak_plots=[218, 202, 398, 450, 504], titles=None):
+    def heatmaps(self, cycle, discharge=True, peaks_to_plot=[218, 202, 398, 450, 504], voltages_to_plot="all", titles=None):
         
         if titles == None:
-            titles = ["I({})".format(peak) for peak in peak_plots]
+            titles = ["I({})".format(peak) for peak in peaks_to_plot]
+            
+
         
         all_peaks = np.unique(np.hstack([[*voltage_values.keys()] for voltage_values in vars(self)[cycle].values.values()]))
         x_extent = self.raw_data[cycle].common.x_extent
         y_extent = self.raw_data[cycle].common.y_extent
         intensities = self.make_intensities(cycle)
+        
+        if voltages_to_plot=="all":
+            voltages = [*intensities.keys()]
+            
         if discharge == True:
-            voltages = np.sort([*intensities.keys()])[::-1]
+            voltages = np.sort(list(voltages))[::-1]
         else:
-            voltages = np.sort([*intensities.keys()])
+            voltages = np.sort(list(voltages))
+                
+                
         vmax = eig.percentile_vmax(np.hstack((values[peak].flatten() for values in intensities.values()
-                                              for peak in values.keys() if peak in peak_plots)))
+                                              for peak in values.keys() if peak in peaks_to_plot)))
 
-        f, (axes) = plt.subplots(len(intensities), len(peak_plots),
-                                 figsize=(len(peak_plots), len(intensities)))
-        for npeak, peak in enumerate(peak_plots):
+        f, (axes) = plt.subplots(len(voltages), len(peaks_to_plot),
+                                 figsize=(len(peaks_to_plot), len(voltages)))
+        for npeak, peak in enumerate(peaks_to_plot):
             axes[0, npeak].set_title(titles[npeak])
             for nvolt, volt in enumerate(voltages):
                 axes[nvolt, 0].set_ylabel("{} V".format(volt))
@@ -506,5 +511,3 @@ class CellData(object):
                     axes[nvolt, npeak].imshow(np.full((x_extent, y_extent), np.nan))   
 
         return f, axes    
-
-    
