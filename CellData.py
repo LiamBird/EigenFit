@@ -487,6 +487,8 @@ class CellData(object):
         
         if voltages_to_plot=="all":
             voltages = [*intensities.keys()]
+        else:
+            voltages = voltages_to_plot
             
         if discharge == True:
             voltages = np.sort(list(voltages))[::-1]
