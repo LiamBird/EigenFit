@@ -427,7 +427,7 @@ class CellData(object):
         x_extent = self.raw_data[cycle].common.x_extent
         y_extent = self.raw_data[cycle].common.y_extent
 
-        intensities = self.make_intensites(cycle)
+        intensities = self.make_intensities(cycle)
 
         intensity_filtered = dict([(voltage, intensities[voltage][peak_plots[0]][predict_dict[voltage]==1])
                                     for voltage in intensities if peak_plots[0] in intensities[voltage].keys()
