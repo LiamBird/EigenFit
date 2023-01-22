@@ -18,11 +18,11 @@ except:
     from tqdm import tqdm_notebook as notebook
     
 ## ADDITIONS JAN 23
-def discharge_voltages(cycle, voltage_list):
+def discharge_voltages(cycle, voltage_list, volt_max=2.8, volt_min=1.5):
     voltages = np.sort(voltage_list)[::-1]
     return (2*cycle-1)*(volt_max-volt_min)-(voltages-volt_min)
 
-def charge_voltages(cycle, voltage_list):
+def charge_voltages(cycle, voltage_list, volt_max=2.8, volt_min=1.5):
     voltages = np.sort(voltage_list)
     return (2*cycle-1)*(volt_max-volt_min)+(voltages-volt_min)
 ## END OF ADDITIONS
@@ -99,38 +99,44 @@ class _KNNpeaks(object):
 
         interact(update, idx=IntSlider(min=0, max=knn_self.n_training_spectra-1, step=1))
         
+    ### Updated 22/01/2023
     def fit_model(knn_self, label_key):
         from sklearn.neighbors import KNeighborsClassifier
         self = knn_self._outer_self
-        
-        labels = np.zeros((knn_self.n_training_spectra))
-        for idx in knn_self.label_lists[label_key]:
-            labels[idx] = 1
-        model = KNeighborsClassifier(n_neighbors=knn_self.n_neighbours)
-        
-        model.fit(knn_self.features, labels)
-        
-        test_data = [knn_self._ft[idx, [knn_self.x_component, knn_self.y_component]] for idx in range(knn_self._ft.shape[0]) if idx not in knn_self.spectra_list]
-        
-        test_predict = model.predict(test_data)
-        
-        ### Why is this necessary?! - need to check why not just
-        ## [n for n in np.arange(knn_self.merged.shape[0]) if n not in knn_self.spectra_list]
-        all_idx = np.arange(knn_self.merged.shape[0], dtype=float)
-        for n in range(all_idx.shape[0]):
-            if all_idx[n] in knn_self.spectra_list:
-                all_idx[n] = np.nan
-        test_idx = [int(n) for n in all_idx if np.isfinite(n)]
-        
-        merged_predict = np.full((knn_self.merged.shape[0]), np.nan)
-        for n, idx in enumerate(knn_self.spectra_list):
-            merged_predict[idx] = labels[n]
-        for n, idx in enumerate(test_idx):
-            merged_predict[idx] = test_predict[n]
-        knn_self.predict_dict = dict([(voltage,
+        voltages = self.dim_red[knn_self._cycle].voltage
+
+        if type(label_key) == str:
+            label_key = [label_key]
+
+        knn_self.predict_dict = dict([(voltage, np.zeros((knn_self.x_extent, knn_self.y_extent), dtype=int))
+                                      for voltage in voltages])
+
+        for label in label_key:
+            y_train = np.zeros((knn_self.n_training_spectra), dtype=int)
+            for idx in knn_self.label_lists[label]:
+                y_train[idx] = 1
+            model = KNeighborsClassifier(n_neighbors=knn_self.n_neighbours)
+
+            x_test= [knn_self._ft[idx, [knn_self.x_component, knn_self.y_component]]
+                       for idx in range(knn_self._ft.shape[0]) if idx not in knn_self.spectra_list]
+
+            model.fit(knn_self.features, y_train)
+            y_predict = model.predict(x_test)
+
+            test_idx = [n for n in np.arange(knn_self.merged.shape[0]) if n not in knn_self.spectra_list]
+
+            merged_predict = np.full((knn_self.merged.shape[0]), np.nan)
+            for n, idx in enumerate(knn_self.spectra_list):
+                merged_predict[idx] = y_train[n]
+            for n, idx in enumerate(test_idx):
+                merged_predict[idx] = y_predict[n]
+
+            predict_label = dict([(voltage, 
                                    merged_predict[n*knn_self.data_extent:(n+1)*knn_self.data_extent].reshape(knn_self.x_extent, knn_self.y_extent))
-                                 for n, voltage in enumerate(self.dim_red[knn_self._cycle].voltage)])
-        
+                                 for n, voltage in enumerate(voltages)])
+
+            for voltage in voltages:
+                knn_self.predict_dict[voltage][predict_label[voltage]==1] = 1
     def check_fit(knn_self):
         present = np.vstack(([values.flatten() for values in knn_self.predict_dict.values()])).flatten()
         f, ax = plt.subplots()
@@ -401,33 +407,36 @@ class CellData(object):
 
         return intensities
 
-    def make_bplot_intensities(self, cycle, predict_dict, discharge=True, peak_plots=[218, 398, 450]):
+    def make_bplot_intensities(self, cycle, peak, predict_dict, discharge=True):
         intensity_data = self.make_intensities(cycle)
-        
+               
         if discharge==True:
             voltages = np.sort([*intensity_data.keys()])[::-1]
         else:
             voltages = np.sort([*intensity_data.keys()])
 
-        bp_i = dict([(peak, dict([(voltage, np.full((x_extent, y_extent), np.nan)) 
-                                  for voltage in voltages]))
-                    for peak in peak_plots])
+        bp_i = dict([(peak, dict([(voltage, np.array([])) 
+                                  for voltage in voltages]))])
 
-        for peak in peak_plots:
-            for voltage in voltages:
-                if peak in np.sort([*intensity_data[voltage].keys()])[::-1]:
+        for voltage in voltages:
+            if peak in np.sort([*intensity_data[voltage].keys()])[::-1]:
+                try:
                     bp_i[peak][voltage] = intensity_data[voltage][peak][predict_dict[voltage]==1][
-                                    np.isfinite(intensity_data[voltage][peak][predict_dict[voltage]==1])
+                                np.isfinite(intensity_data[voltage][peak][predict_dict[voltage]==1])
                     ]
+                except:
+                    bp_i[peak][voltage] = np.array([])
         return bp_i
     
-    def PS_peak_scatter(self, cycle, predict_dict, discharge=True, peak_plots=[398, 450], voltage_cutoff=2.1):
-
+    def PS_peak_scatter(self, cycle, labels_to_fit, discharge=True, peak_plots=[398, 450], voltage_cutoff=2.1):
         all_peaks = np.unique(np.hstack([[*voltage_values.keys()] for voltage_values in vars(self)[cycle].values.values()]))
         x_extent = self.raw_data[cycle].common.x_extent
         y_extent = self.raw_data[cycle].common.y_extent
 
         intensities = self.make_intensities(cycle)
+        
+        vars(self.KNN)[cycle].fit_model(labels_to_fit)
+        predict_dict = vars(self.KNN)[cycle].predict_dict
 
         intensity_filtered = dict([(voltage, intensities[voltage][peak_plots[0]][predict_dict[voltage]==1])
                                     for voltage in intensities if peak_plots[0] in intensities[voltage].keys()
@@ -513,3 +522,5 @@ class CellData(object):
                     axes[nvolt, npeak].imshow(np.full((x_extent, y_extent), np.nan))   
 
         return f, axes    
+
+    
