@@ -176,8 +176,9 @@ class SpectrumMap(object):
         s.clipped.map
     """
     
-    def __init__(self, data_file):
+    def __init__(self, data_file, reverse_shift=True):
         raw_data = np.loadtxt(data_file)
+        self._raw_data = raw_data
         self.x_coords = np.array(np.unique(raw_data[:, 0]), dtype=int)
         self.y_coords = np.array(np.unique(raw_data[:, 1]), dtype=int)
         raw_shift, raw_shift_locs = np.unique(raw_data[:, 2], return_index=True)
@@ -187,13 +188,19 @@ class SpectrumMap(object):
         
         raw_shift_extent = raw_shift.shape[0]
         raw_map = np.zeros((self.x_extent, self.y_extent, raw_shift_extent))
+        
         for nx, x in enumerate(self.x_coords):
             for ny, y in enumerate(self.y_coords):
-                spectrum = raw_data[np.nonzero((raw_data[:, 0] == x) & (raw_data[:, 1] == y)), -1].flatten()
-                raw_map[nx, ny, :] = spectrum[::-1] 
-                
+#                     spectrum = raw_data[np.nonzero((raw_data[:, 0] == float(x)) & (raw_data[:, 1]) == float(y)), -1].flatten()
+                spectrum = self._raw_data[np.nonzero((self._raw_data[:, 0]==x) & (self._raw_data[:, 1]==y))][:, -1].flatten()
+                if spectrum.shape[0] > 0:
+                    if reverse_shift == True:
+                        raw_map[nx, ny, :] = spectrum[::-1] 
+                    else:
+                        raw_map[nx, ny, :] = spectrum
+
         setattr(self, "raw", _Map(shift=raw_shift, map_data=raw_map))
-        
+
     def set_CCD_remove(self, pixel_position, smooth_width=10):
         """
         Removes a spike at a constant shift value at every (x, y) position in a Raman map, for example due to a faulty pixel on a CCD device
