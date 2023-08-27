@@ -14,3 +14,4 @@ from LinearCombinationFit import *
 from make_lorentzian_params import *
 from TwoPassFit import *
 from percentile_vmax import *
+from OnePassFit import *
