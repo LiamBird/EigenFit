@@ -102,10 +102,13 @@ def CRE_single(shift, intensity, spike_pos, smooth_width=10):
 
 
 class Spectrum(object):
-    def __init__(self, filename):
-        dataload = np.loadtxt(filename, delimiter=",")
+    def __init__(self, filename, delimiter=","):
+        dataload = np.loadtxt(filename, delimiter=delimiter)
         self.raw = _Spectrum(dataload[:, 0].flatten(),
                              dataload[:, 1].flatten())
+
+        self._version = "03.10.2024"
+        self._change_log = ["03.10.2024: Added delimiter argument. (Started collecting data from Horiba instrument with \t delimiter)"]
         
     def set_clip_range(self, start_shift=None, end_shift=None):
         """
