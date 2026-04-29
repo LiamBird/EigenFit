@@ -1,9 +1,10 @@
+import os
+import glob
+import numpy as np
+from tqdm import notebook
+import re
+
 def convert_thermofisher_map(directory, filename_output=None):
-    import os
-    import glob
-    import numpy as np
-    from tqdm import notebook
-    import re
     
     allfiles = glob.glob(os.path.join(directory, "*.csv"))
     if filename_output==None:

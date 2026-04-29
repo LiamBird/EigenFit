@@ -1,0 +1,10 @@
+Metadata-Version: 2.4
+Name: EigenFit
+Version: 0.1.0
+Summary: Tools for spectral fitting and map analysis
+Author: Your Name
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+
+# EigenFit
+Tools for viewing and analysing Raman map data in Python

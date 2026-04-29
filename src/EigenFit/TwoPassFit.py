@@ -5,7 +5,7 @@ from datetime import datetime
 from lmfit.models import LinearModel, LorentzianModel
 from tqdm import notebook
 
-from make_lorentzian_params import *
+from .make_lorentzian_params import *
 
 def xy_2PF(x, y, label, SeriesDimensionReduction_obj, SeriesLCF_obj, noise_tolerance=1):
     

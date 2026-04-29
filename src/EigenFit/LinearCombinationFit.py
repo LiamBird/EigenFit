@@ -4,7 +4,7 @@ import os
 from lmfit import Parameters
 from lmfit.models import LinearModel, LorentzianModel
 
-from make_lorentzian_params import *
+from .make_lorentzian_params import *
 
 def linear_combination_fit(shift, components, selected_peaks, center_tolerance=10):
     from lmfit import Parameters

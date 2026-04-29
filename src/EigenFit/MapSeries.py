@@ -25,7 +25,7 @@ try:
 except:
     from tqdm import tqdm_notebook as notebook
     
-from SpectrumMap import SpectrumMap
+from .SpectrumMap import SpectrumMap
 
 def get_sequence_id(fname, sequence_label="cellvoltage"):
     import re
