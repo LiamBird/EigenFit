@@ -5,12 +5,34 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "EigenFit"
 version = "0.1.0"
-description = "Tools for spectral fitting and map analysis"
+description = "Tools for spectral fitting and Raman map analysis, including rapid fitting of low signal-to-noise ratio data using principal component analysis."
 readme = "README.md"
 requires-python = ">=3.9"
+license = "MIT"
+license-files=["LICENCE"]
+
 authors = [
-  {name = "Your Name"}
+  { name = "Liam Bird",
+    email = "liam.bird@eng.ox.ac.uk"}
 ]
+dependencies = [
+  "numpy",
+  "matplotlib",
+  "lmfit",
+  "sklearn",
+  "ipywidgets",
+  "BaselineRemoval"
+]
+
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Operating System :: OS Independent",
+  "License :: OSI Approved :: MIT License"
+]
+
+[project.urls]
+Homepage = "https://github.com/LiamBird/EigenFit"
+Issues = "https://github.com/LiamBird/EigenFit/issues"
 
 [tool.setuptools.packages.find]
 where = ["src"]
