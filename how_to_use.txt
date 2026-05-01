@@ -1,0 +1,10 @@
+Test PyPI package install:
+
+Recommended: 
+Run from jupyter notebook so that everything gets installed in the correct environment!
+You only need to run this once 
+%pip install --index-url https://pypi.org/simple/ --extra-index-url https://test.pypi.org/simple/ EigenFit
+
+Alternative: install in command line:
+python -m pip install --index-url https://pypi.org/simple/ --extra-index-url https://test.pypi.org/simple/ EigenFit
+

@@ -1,0 +1,17 @@
+EigenFit/DimensionReduction.py,sha256=rlSAz4gkZnWMAQAx5qP8zDjR2hSXEyDgnrU8I3l51TY,12223
+EigenFit/LinearCombinationFit.py,sha256=TXXfbNglywIJo_k1Z13DK-DRECVSEVOTIEYdHkPoIp4,5694
+EigenFit/MapSeries.py,sha256=LQEZCD-aPSJO9bdrW11S0yUX1cpSQIrFVPNrwagivQc,16076
+EigenFit/OnePassFit.py,sha256=AurHnzRtzf-SEXhBvtakvLq4X7DRZg2jI_AEn5VQKmU,11564
+EigenFit/SelectPeaks.py,sha256=09GEmnHVGNFcyd362qZ7Ulcnxrl3wK0OEaASjG6eLGQ,2771
+EigenFit/Spectrum.py,sha256=Au22465Fp1hBJMtZnfkuL8BiBkaK73tY8aZevIAqG2w,6723
+EigenFit/SpectrumMap.py,sha256=0RGHF_f-CkqjoJRJ1xk3_MipH_nKc5X7l7qYXbBgePw,13872
+EigenFit/TwoPassFit.py,sha256=fQHspucUj9tylkUB_M7oko7gW7rM1Aem3YSJl1rEPaQ,5065
+EigenFit/__init__.py,sha256=A-VTenRfdhlWUi-KTwP0uiQILaEdstFsfwxrE0jJ3KM,495
+EigenFit/convert_thermofisher_map.py,sha256=_pPMwwqg_FjVYRDiXZeyE7uAwhPhikEwJqdctIyf5qE,1121
+EigenFit/make_lorentzian_params.py,sha256=H7LzytmntlSvtFxrE-C3sDcQw7oh6rS6NrYxW5_uhyo,801
+EigenFit/percentile_vmax.py,sha256=ZfGq83B0oT_DxuX0KZJ1nuoOQwwRIGj3OcY0-dVyzNM,296
+eigenfit-0.1.1.dist-info/licenses/LICENCE.txt,sha256=8LFJgEiUU8iBLmxm-8lRn6_lCL-OVWuvH3HOwT-3ZQA,1094
+eigenfit-0.1.1.dist-info/METADATA,sha256=WUGwl1qLr_43NB0VBdS_zBFtoPoJrfjOafora-NA2AY,1928
+eigenfit-0.1.1.dist-info/WHEEL,sha256=aeYiig01lYGDzBgS8HxWXOg3uV61G9ijOsup-k9o1sk,91
+eigenfit-0.1.1.dist-info/top_level.txt,sha256=PmU3hrFZDRu0XeRQybMSd_Vm2ZQyY03q_qag0GObwaI,9
+eigenfit-0.1.1.dist-info/RECORD,,

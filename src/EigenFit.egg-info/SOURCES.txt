@@ -1,3 +1,4 @@
+LICENCE.txt
 README.md
 pyproject.toml
 src/EigenFit/DimensionReduction.py
@@ -15,4 +16,5 @@ src/EigenFit/percentile_vmax.py
 src/EigenFit.egg-info/PKG-INFO
 src/EigenFit.egg-info/SOURCES.txt
 src/EigenFit.egg-info/dependency_links.txt
+src/EigenFit.egg-info/requires.txt
 src/EigenFit.egg-info/top_level.txt

@@ -1,0 +1,7 @@
+numpy
+matplotlib
+lmfit
+scikit-learn
+ipywidgets
+BaselineRemoval
+tqdm
