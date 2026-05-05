@@ -21,7 +21,8 @@ dependencies = [
   "scikit-learn",
   "ipywidgets",
   "BaselineRemoval",
-  "tqdm"
+  "tqdm",
+  "ipympl"
 ]
 
 classifiers = [
